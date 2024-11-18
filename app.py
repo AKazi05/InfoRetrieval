@@ -5,6 +5,8 @@ from werkzeug.utils import secure_filename
 import os
 from PyPDF2 import PdfReader
 from docx import Document
+import re
+import spacy
 
 app = Flask(__name__)
 
@@ -75,10 +77,18 @@ def extract_abstract(text):
         if match:
             return match.group(1).strip()
 
-    return None  # Return None if no abstract is found
+    return None  
 
 def predict_category(text):
     """Predicts the category of the document."""
+
+    if "news" in text.lower():
+        return "News Article"
+
+    # Check explicitly for keywords indicating Academic Documents
+    if any(keyword in text.lower() for keyword in ["abstract", "a b s t r a c t"]):
+        return "Academic Document"
+
     # Tokenize and format the text for BERT
     inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512, padding="max_length")
     outputs = model(**inputs)
@@ -87,7 +97,7 @@ def predict_category(text):
 
     # Map class IDs to labels
     labels = {0: "Resume", 2: "Academic Document", 1: "News Article"}
-    return labels[predicted_class_id]
+    return labels.get(predicted_class_id, "News Article")  # Default to News Article if no valid prediction
 
 @app.route("/", methods=["GET", "POST"])
 def upload_file():
@@ -109,9 +119,6 @@ def upload_file():
 
                 # Predict category
                 prediction = predict_category(text)
-
-                # Clean up the uploaded file if needed
-                # os.remove(file_path)  # Uncomment if you want to delete after prediction
 
                 return render_template("result.html", prediction=prediction)
             except Exception as e:
