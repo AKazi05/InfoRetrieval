@@ -23,23 +23,23 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def file_to_text(file_path):
-    """Converts file content into text based on its type."""
+    """Converts file content into text and extracts the abstract for academic documents."""
     ext = file_path.rsplit('.', 1)[-1].lower()
     
     # Process PDF files
     if ext == 'pdf':
         reader = PdfReader(file_path)
-        return " ".join(page.extract_text() for page in reader.pages)
+        full_text = " ".join(page.extract_text() for page in reader.pages)
     
     # Process DOCX files
     elif ext == 'docx':
         doc = Document(file_path)
-        return " ".join(paragraph.text for paragraph in doc.paragraphs)
+        full_text = " ".join(paragraph.text for paragraph in doc.paragraphs)
     
     # Process plain text files
     elif ext == 'txt':
         with open(file_path, 'r', encoding='utf-8') as f:
-            return f.read()
+            full_text = f.read()
     
     # For DOC files (requires LibreOffice or similar)
     elif ext == 'doc':
@@ -49,12 +49,33 @@ def file_to_text(file_path):
             os.system(f"soffice --headless --convert-to docx \"{file_path}\" --outdir ./uploads")
             doc = Document(converted_path)
             os.remove(converted_path)  # Clean up the converted file
-            return " ".join(paragraph.text for paragraph in doc.paragraphs)
+            full_text = " ".join(paragraph.text for paragraph in doc.paragraphs)
         except Exception as e:
             raise ValueError(f"Error processing DOC file: {e}")
     
     else:
         raise ValueError("Unsupported file type")
+
+    # Extract the abstract (case insensitive)
+    abstract = extract_abstract(full_text)
+    return abstract or full_text  # Fallback to full text if abstract is not found
+
+def extract_abstract(text):
+    """Extracts the abstract section from the text."""
+    import re
+
+    # Common abstract header patterns
+    abstract_patterns = [
+        r"(?<=\n)abstract[:\s]*(.*?)(?=\n\w|$)",  # Match "Abstract" section
+        r"(?<=\n)summary[:\s]*(.*?)(?=\n\w|$)",   # Match "Summary" (alternate term)
+    ]
+
+    for pattern in abstract_patterns:
+        match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
+        if match:
+            return match.group(1).strip()
+
+    return None  # Return None if no abstract is found
 
 def predict_category(text):
     """Predicts the category of the document."""
@@ -65,7 +86,7 @@ def predict_category(text):
     predicted_class_id = logits.argmax().item()
 
     # Map class IDs to labels
-    labels = {0: "Resume", 1: "Academic Document", 2: "News Article"}
+    labels = {0: "Resume", 2: "Academic Document", 1: "News Article"}
     return labels[predicted_class_id]
 
 @app.route("/", methods=["GET", "POST"])
