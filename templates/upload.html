@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload File | Document Classifier</title>
+    <title>Document Classifier & Summarizer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,6 +14,14 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+        }
+        .main-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 900px;
+            width: 100%;
         }
         .container {
             background-color: #fff;
@@ -57,16 +65,29 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Upload a File</h1>
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% endif %}
-        <form action="/" method="POST" enctype="multipart/form-data">
-            <label for="file">Choose a file:</label>
-            <input type="file" name="file" id="file" required>
-            <input type="submit" value="Upload">
-        </form>
+    <div class="main-container">
+        <!-- Document Classifier Section -->
+        <div class="container">
+            <h1>Document Classifier</h1>
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+            <form action="/" method="POST" enctype="multipart/form-data">
+                <label for="file">Choose a file:</label>
+                <input type="file" name="file" id="file" required>
+                <input type="submit" value="Upload">
+            </form>
+        </div>
+
+        <!-- Document Summarizer Section -->
+        <div class="container">
+            <h1>Document Summarizer</h1>
+            <form>
+                <label for="summary-file">Choose a file:</label>
+                <input type="file" name="summary-file" id="summary-file" required>
+                <input type="submit" value="Summarize" disabled>
+            </form>
+        </div>
     </div>
 </body>
 </html>
