@@ -14,7 +14,8 @@ app = Flask(__name__)
 os.makedirs("./uploads", exist_ok=True)
 
 # Load the model and tokenizer
-model = BertForSequenceClassification.from_pretrained("my_trained_model")
+model_path = "InfoRetrieval-2\my_trained_model" #change this to relative path of the model
+model = BertForSequenceClassification.from_pretrained(model_path)
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
 # Allowed file types
